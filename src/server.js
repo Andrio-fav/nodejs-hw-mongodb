@@ -13,13 +13,7 @@ export const setupServer = () => {
   
   const app = express();
 
-  app.use(
-    pino({
-      transport: {
-        target: 'pino-pretty',
-      },
-    }),
-  );
+  app.use(pino());
   app.use(cors());
 
   app.get('/', (req, res) => {
