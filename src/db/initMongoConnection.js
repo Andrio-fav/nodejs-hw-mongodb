@@ -14,6 +14,6 @@ export const initMongoConnection = async () => {
     console.log('Mongo connection successfully established!');
   } catch (error) {
     console.log('An error occured: ', error);
-    throw error;в
+    throw error;
   }
 };
