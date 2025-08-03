@@ -18,15 +18,13 @@ export const getContactsController = async (req, res) => {
 };
 
 export const getContactByIdController = async (req, res) => {
-  const contact = await getContactById(req.params.id);
-  console.log(contact);
-
+  const contact = await getContactById(req.params.contactId);
   if (!contact) {
     throw createHttpError(404, 'Contact not found');
   }
   res.json({
     status: 200,
-    message: `Successfully found contact with id: ${req.params.id}!`,
+    message: `Successfully found contact with id: ${req.params.contactId}!`,
     data: contact,
   });
 };
@@ -41,11 +39,11 @@ export const createContactController = async (req, res) => {
 };
 
 export const updateContactController = async (req, res) => {
-  const contact = await updateContact(req.params.id, req.body);
+  const contact = await updateContact(req.params.contactId, req.body);
   if (!contact) {
     throw createHttpError(404, 'Contact not found');
   }
-  res.json({
+  res.status(200).json({
     status: 200,
     message: 'Successfully patched a contact!',
     data: contact,
@@ -53,13 +51,9 @@ export const updateContactController = async (req, res) => {
 };
 
 export const deleteContactController = async (req, res) => {
-  const contact = await deleteContact(req.params.id);
+  const contact = await deleteContact(req.params.contactId);
   if (!contact) {
     throw createHttpError(404, 'Contact not found');
   }
-  res.status(204).json({
-    status: 204,
-    message: 'Successfully deleted a contact!',
-    data: contact,
-  });
+  res.status(204).end();
 };
