@@ -8,12 +8,33 @@ import {
   deleteContact,
 } from '../services/contacts.js';
 
+import { parsePaginationParams } from '../utils/parsePaginationParams.js';
+import { parseSortParams } from '../utils/parseSortParams.js';
+import { parseFilterParams } from '../utils/parseFilterParams.js';
+import { calculatePaginationData } from '../utils/calculatePaginationData.js';
+
 export const getContactsController = async (req, res) => {
-  const contacts = await getAllContacts();
+  const { page, perPage } = parsePaginationParams(req.query);
+  const { sortBy, sortOrder } = parseSortParams(req.query);
+  const { isFavourite, type } = parseFilterParams(req.query);
+
+  const filter = {};
+  if (isFavourite !== null) filter.isFavourite = isFavourite;
+  if (type !== null) filter.contactType = type;
+
+  const sort = { [sortBy]: sortOrder === 'asc' ? 1 : -1 };
+
+  const { data, totalItems } = await getAllContacts({ page, perPage, filter, sort });
+
+  const paginationData = calculatePaginationData(totalItems, page, perPage);
+
   res.json({
     status: 200,
     message: 'Successfully found contacts!',
-    data: contacts,
+    data: {
+      data,
+      ...paginationData,
+    },
   });
 };
 
@@ -33,7 +54,7 @@ export const createContactController = async (req, res) => {
   const contact = await createContact(req.body);
   res.status(201).json({
     status: 201,
-    message: `Successfully created a contact!`,
+    message: 'Successfully created a contact!',
     data: contact,
   });
 };
