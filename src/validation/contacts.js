@@ -18,12 +18,13 @@ export const bodyValidationSchema = Joi.object({
       'string.base': '"phoneNumber" must be a string',
       'string.min': '"phoneNumber" must be at least {#limit} characters',
       'string.max': '"phoneNumber" must be at most {#limit} characters',
-      'string.pattern.base': '"phoneNumber" must contain only digits, spaces, parentheses, plus or minus signs',
+      'string.pattern.base':
+        '"phoneNumber" must contain only digits, spaces, parentheses, plus or minus signs',
     }),
 
   email: Joi.string()
     .min(3)
-    .max(20)
+    .max(50)
     .email()
     .messages({
       'string.base': '"email" must be a string',
