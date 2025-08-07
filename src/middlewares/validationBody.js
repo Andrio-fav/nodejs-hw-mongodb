@@ -6,12 +6,17 @@ const validationBody = (schema) => async (request, response, next) => {
     await schema.validateAsync(request.body, { abortEarly: false });
     next();
   } catch (error) {
-    const errors = error.details.map((err) => ({
-      message: err.message,
-      path: err.path.join('.'),
+    const formattedErrors = error.details.map((detail) => ({
+      field: detail.path.join('.'),
+      message: detail.message,
     }));
 
-    next(createHttpError(400, 'Validation error', { errors }));
+    next(
+      createHttpError(400, {
+        message: 'Validation error',
+        errors: formattedErrors,
+      })
+    );
   }
 };
 
