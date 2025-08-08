@@ -2,19 +2,31 @@ import 'dotenv/config';
 import express from 'express';
 import pino from 'pino-http';
 import cors from 'cors';
+import cookieParser from 'cookie-parser';
 
 import { getEnvVar } from './utils/getEnvVar.js';
 import { getAllContacts, getContactById } from './services/contacts.js';
 
 
+import router from './routes/index.js';
+import { notFoundHandler } from './middlewares/notFoundHandler.js';
+import { errorHandler } from './middlewares/errorHandler.js';
+
+const PORT = getEnvVar('PORT');
 
 export const setupServer = () => {
-  const PORT = getEnvVar('PORT');
-  
   const app = express();
-
-  app.use(pino());
+  
+  app.use(express.json());
+  app.use(
+    pino({
+      transport: {
+        target: 'pino-pretty',
+      },
+    }),
+  );
   app.use(cors());
+  app.use(cookieParser());
 
   app.get('/', (req, res) => {
     res.json({
