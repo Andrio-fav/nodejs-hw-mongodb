@@ -1,69 +1,45 @@
 import Joi from 'joi';
 
-export const createContactsSchema = Joi.object({
+export const bodyValidationSchema = Joi.object({
   name: Joi.string()
-    .min(2)
-    .max(50)
-    .required()
+    .min(3)
+    .max(20)
     .messages({
       'string.base': '"name" must be a string',
-      'string.empty': '"name" is required',
       'string.min': '"name" must be at least {#limit} characters',
       'string.max': '"name" must be at most {#limit} characters',
-      'any.required': '"name" is required',
+    }),
+
+  phoneNumber: Joi.string()
+    .min(3)
+    .max(20)
+    .pattern(/^[\d\s()+-]+$/)
+    .messages({
+      'string.base': '"phoneNumber" must be a string',
+      'string.min': '"phoneNumber" must be at least {#limit} characters',
+      'string.max': '"phoneNumber" must be at most {#limit} characters',
+      'string.pattern.base': '"phoneNumber" must contain only digits, spaces, parentheses, plus or minus signs',
     }),
 
   email: Joi.string()
+    .min(3)
+    .max(50)
     .email()
-    .required()
     .messages({
       'string.base': '"email" must be a string',
+      'string.min': '"email" must be at least {#limit} characters',
+      'string.max': '"email" must be at most {#limit} characters',
       'string.email': '"email" must be a valid email address',
-      'any.required': '"email" is required',
     }),
 
-  phone: Joi.string()
-    .pattern(/^[0-9\-+\s()]*$/)
-    .required()
-    .messages({
-      'string.base': '"phone" must be a string',
-      'string.empty': '"phone" is required',
-      'string.pattern.base': '"phone" must contain only numbers, spaces, dashes, or parentheses',
-      'any.required': '"phone" is required',
-    }),
+  isFavourite: Joi.boolean().messages({
+    'boolean.base': '"isFavourite" must be a boolean',
+  }),
 
-  favorite: Joi.boolean()
+  contactType: Joi.string()
+    .valid('work', 'home', 'personal')
     .messages({
-      'boolean.base': '"favorite" must be a boolean',
+      'string.base': '"contactType" must be a string',
+      'any.only': '"contactType" must be one of [work, home, personal]',
     }),
 });
-
-export const updateContactsSchema = Joi.object({
-  name: Joi.string()
-    .min(2)
-    .max(50)
-    .messages({
-      'string.base': '"name" must be a string',
-      'string.min': '"name" must be at least {#limit} characters',
-      'string.max': '"name" must be at most {#limit} characters',
-    }),
-
-  email: Joi.string()
-    .email()
-    .messages({
-      'string.base': '"email" must be a string',
-      'string.email': '"email" must be a valid email address',
-    }),
-
-  phone: Joi.string()
-    .pattern(/^[0-9\-+\s()]*$/)
-    .messages({
-      'string.base': '"phone" must be a string',
-      'string.pattern.base': '"phone" must contain only numbers, spaces, dashes, or parentheses',
-    }),
-
-  favorite: Joi.boolean()
-    .messages({
-      'boolean.base': '"favorite" must be a boolean',
-    }),
-}).min(1);
