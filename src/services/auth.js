@@ -3,7 +3,6 @@ import bcrypt from 'bcrypt';
 import createHttpError from 'http-errors';
 import { usersCollection } from '../db/models/user.js';
 import { sessionsCollection } from '../db/models/session.js';
-import { FIFTEEN_MINUTES, THIRTY_DAYS } from '../constants/index.js';
 
 export const registerUser = async (payload) => {
   const user = await usersCollection.findOne({ email: payload.email });
