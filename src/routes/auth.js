@@ -7,20 +7,20 @@ import {
   registerController,
 } from '../controllers/auth.js';
 import { ctrlWrapper } from '../utils/ctrlWrapper.js';
-import { validateBody } from '../middlewares/validateBody.js';
+import { validationBody } from '../middlewares/validationBody.js';
 import { loginUserSchema, registerUserSchema } from '../validation/auth.js';
 
 const router = Router();
 
 router.post(
   '/register',
-  validateBody(registerUserSchema),
+  validationBody(registerUserSchema),
   ctrlWrapper(registerController),
 );
 
 router.post(
   '/login',
-  validateBody(loginUserSchema),
+  validationBody(loginUserSchema),
   ctrlWrapper(loginController),
 );
 
