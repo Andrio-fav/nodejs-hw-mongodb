@@ -55,11 +55,11 @@ export const refreshController = async (req, res) => {
 
   res.cookie('sessionId', session._id, {
     httpOnly: true,
-    expire: session.refreshTokenValidUntil,
+    expires: session.refreshTokenValidUntil,
   });
   res.cookie('refreshToken', session.refreshToken, {
     httpOnly: true,
-    expire: session.refreshTokenValidUntil,
+    expires: session.refreshTokenValidUntil,
   });
 
   res.json({
