@@ -21,7 +21,7 @@ export const getContactsController = async (req, res) => {
     sortBy,
     sortOrder,
     filter,
-    req.user.id,
+    req.user.id 
   );
   res.json({
     status: 200,
@@ -32,7 +32,6 @@ export const getContactsController = async (req, res) => {
 
 export const getContactByIdController = async (req, res) => {
   const contact = await getContactById(req.params.id, req.user.id);
-
   if (!contact) {
     throw createHttpError(404, 'Contact not found');
   }

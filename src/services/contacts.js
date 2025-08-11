@@ -12,18 +12,18 @@ export const getAllContacts = async (
   const skip = page > 0 ? (page - 1) * perPage : 0;
   const limit = perPage;
 
-  const contactsQuery = ContactsCollection.find({ userId }); 
+  const query = { userId };
 
   if (typeof filter.type !== 'undefined') {
-    contactsQuery.where('contactType').equals(filter.type);
+    query.contactType = filter.type;
   }
   if (typeof filter.isFavourite !== 'undefined') {
-    contactsQuery.where('isFavourite').equals(filter.isFavourite);
+    query.isFavourite = filter.isFavourite;
   }
 
   const [contactsCount, contacts] = await Promise.all([
-    contactsQuery.clone().countDocuments(),
-    contactsQuery
+    ContactsCollection.countDocuments(query),
+    ContactsCollection.find(query)
       .sort({ [sortBy]: sortOrder })
       .skip(skip)
       .limit(limit)
