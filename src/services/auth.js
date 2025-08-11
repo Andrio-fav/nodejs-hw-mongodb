@@ -4,6 +4,9 @@ import createHttpError from 'http-errors';
 import { usersCollection } from '../db/models/user.js';
 import { sessionsCollection } from '../db/models/session.js';
 
+const FIFTEEN_MINUTES = 15 * 60 * 1000; 
+const THIRTY_DAYS = 30 * 24 * 60 * 60 * 1000; 
+
 export const registerUser = async (payload) => {
   const user = await usersCollection.findOne({ email: payload.email });
 
