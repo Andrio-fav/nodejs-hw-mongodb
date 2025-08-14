@@ -1,6 +1,6 @@
 import { bodyValidationSchema } from '../validation/contacts.js';
 
-const validationBody = (schema) => async (req, res, next) => {
+export const validationBody = (schema) => async (req, res, next) => {
   try {
     await schema.validateAsync(req.body, { abortEarly: false });
     next();
