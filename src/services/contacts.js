@@ -21,7 +21,11 @@ export const createContact = async (payload, userId) => {
 };
 
 export const updateContact = async (id, payload, userId) => {
-  return ContactsCollection.findOneAndUpdate({ _id: id, userId }, payload, { new: true });
+  return ContactsCollection.findOneAndUpdate(
+    { _id: id, userId },
+    payload,
+    { new: true }
+  );
 };
 
 export const deleteContact = async (id, userId) => {
