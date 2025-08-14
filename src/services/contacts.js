@@ -1,6 +1,7 @@
 import { ContactsCollection } from '../db/models/contact.js';
 import { calculatePaginationData } from '../utils/calculatePaginationData.js';
 
+
 export const getAllContacts = async (
   page,
   perPage,
@@ -36,11 +37,11 @@ export const getAllContacts = async (
 };
 
 export const getContactById = async (id, userId) => {
-  return ContactsCollection.findOne({ _id: id, userId }); 
+  return ContactsCollection.findOne({ _id: id, userId });
 };
 
-export const createContact = async (payload) => {
-  return ContactsCollection.create(payload);
+export const createContact = async (payload, userId) => {
+  return ContactsCollection.create({ ...payload, userId });
 };
 
 export const updateContact = async (id, payload, userId) => {
@@ -52,5 +53,5 @@ export const updateContact = async (id, payload, userId) => {
 };
 
 export const deleteContact = async (id, userId) => {
-  return ContactsCollection.findOneAndDelete({ _id: id, userId }); 
+  return ContactsCollection.findOneAndDelete({ _id: id, userId });
 };

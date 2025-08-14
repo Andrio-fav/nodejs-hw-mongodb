@@ -1,72 +1,142 @@
-import {
-  loginUser,
-  logoutUser,
-  refreshSession,
-  registerUser,
-} from '../services/auth.js';
+import bcrypt from 'bcrypt';
+import jwt from 'jsonwebtoken';
+import createHttpError from 'http-errors';
+import User from '../models/user.js';
+import Session from '../models/session.js';
+import { getEnvVar } from '../utils/getEnvVar.js';
 
-export const registerController = async (req, res) => {
-  const user = await registerUser(req.body);
-  res.status(201).json({
-    status: 201,
-    message: 'Successfully registered a user!',
-    data: user,
-  });
+const JWT_SECRET = getEnvVar('JWT_SECRET');
+const ACCESS_TOKEN_TTL = 15 * 60 * 1000; 
+const REFRESH_TOKEN_TTL = 30 * 24 * 60 * 60 * 1000; 
+
+const generateTokens = (userId) => {
+  const accessToken = jwt.sign({ userId }, JWT_SECRET, { expiresIn: '15m' });
+  const refreshToken = jwt.sign({ userId }, JWT_SECRET, { expiresIn: '30d' });
+
+  return {
+    accessToken,
+    refreshToken,
+    accessTokenValidUntil: new Date(Date.now() + ACCESS_TOKEN_TTL),
+    refreshTokenValidUntil: new Date(Date.now() + REFRESH_TOKEN_TTL),
+  };
 };
 
-export const loginController = async (req, res) => {
-  const session = await loginUser(req.body.email, req.body.password);
+export const register = async (req, res, next) => {
+  try {
+    const { name, email, password } = req.body;
 
-  res.cookie('sessionId', session._id, {
-    httpOnly: true,
-    expires: session.refreshTokenValidUntil,
-  });
-  res.cookie('refreshToken', session.refreshToken, {
-    httpOnly: true,
-    expires: session.refreshTokenValidUntil,
-  });
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      throw createHttpError(409, 'Email in use');
+    }
 
-  res.json({
-    status: 200,
-    message: 'Successfully logged in an user!',
-    data: {
-      accessToken: session.accessToken,
-    },
-  });
-};
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const newUser = await User.create({ name, email, password: hashedPassword });
 
-export const logoutController = async (req, res) => {
-  const { sessionId } = req.cookies;
+    const { password: _, ...userData } = newUser.toObject();
 
-  if (sessionId) {
-    await logoutUser(sessionId);
+    res.status(201).json({
+      status: 201,
+      message: 'Successfully registered a user!',
+      data: userData,
+    });
+  } catch (error) {
+    next(error);
   }
-
-  res.clearCookie('sessionId');
-  res.clearCookie('refreshToken');
-
-  res.status(204).send();
 };
 
-export const refreshController = async (req, res) => {
-  const { sessionId, refreshToken } = req.cookies;
+export const login = async (req, res, next) => {
+  try {
+    const { email, password } = req.body;
 
-  const session = await refreshSession(sessionId, refreshToken);
+    const user = await User.findOne({ email });
+    if (!user) {
+      throw createHttpError(401, 'Invalid email or password');
+    }
 
-  res.cookie('sessionId', session._id, {
-    httpOnly: true,
-    expires: session.refreshTokenValidUntil,
-  });
-  res.cookie('refreshToken', session.refreshToken, {
-    httpOnly: true,
-    expires: session.refreshTokenValidUntil,
-  });
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    if (!isPasswordValid) {
+      throw createHttpError(401, 'Invalid email or password');
+    }
 
-  res.json({
-    status: 200,
-    message: 'Successfully refreshed session!',
-    data: {
-      accessToken: session.accessToken,
-    },
-  });
+    await Session.deleteOne({ userId: user._id });
+
+    const { accessToken, refreshToken, accessTokenValidUntil, refreshTokenValidUntil } = generateTokens(user._id);
+    await Session.create({
+      userId: user._id,
+      accessToken,
+      refreshToken,
+      accessTokenValidUntil,
+      refreshTokenValidUntil,
+    });
+
+    res.cookie('refreshToken', refreshToken, {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'strict',
+      maxAge: REFRESH_TOKEN_TTL,
+    });
+
+    res.status(200).json({
+      status: 200,
+      message: 'Successfully logged in a user!',
+      data: { accessToken },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const refresh = async (req, res, next) => {
+  try {
+    const { refreshToken } = req.cookies;
+    if (!refreshToken) {
+      throw createHttpError(401, 'No refresh token provided');
+    }
+
+    const payload = jwt.verify(refreshToken, JWT_SECRET);
+    const session = await Session.findOne({ refreshToken });
+    if (!session || session.refreshTokenValidUntil < new Date()) {
+      throw createHttpError(401, 'Invalid or expired refresh token');
+    }
+
+    await Session.deleteOne({ _id: session._id });
+
+    const { accessToken, refreshToken: newRefresh, accessTokenValidUntil, refreshTokenValidUntil } = generateTokens(payload.userId);
+    await Session.create({
+      userId: payload.userId,
+      accessToken,
+      refreshToken: newRefresh,
+      accessTokenValidUntil,
+      refreshTokenValidUntil,
+    });
+
+    res.cookie('refreshToken', newRefresh, {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'strict',
+      maxAge: REFRESH_TOKEN_TTL,
+    });
+
+    res.status(200).json({
+      status: 200,
+      message: 'Successfully refreshed a session!',
+      data: { accessToken },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const logout = async (req, res, next) => {
+  try {
+    const { refreshToken } = req.cookies;
+    if (refreshToken) {
+      await Session.deleteOne({ refreshToken });
+    }
+    res.clearCookie('refreshToken');
+    res.status(204).send();
+  } catch (error) {
+    next(error);
+  }
 };
