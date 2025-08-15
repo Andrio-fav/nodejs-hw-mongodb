@@ -44,21 +44,23 @@ export const getContactByIdController = async (req, res) => {
   if (!contact) {
     throw createHttpError(404, 'Contact not found');
   }
+  const { id, ...contactData } = contact.toObject ? contact.toObject() : contact;
 
   res.json({
     status: 200,
     message: `Successfully found contact with id: ${req.params.id}!`,
-    data: contact,
+    data: contactData,
   });
 };
 
 export const createContactController = async (req, res) => {
   const contact = await createContact(req.body, req.user._id);
+  const { id, ...contactData } = contact.toObject ? contact.toObject() : contact; // Remove 'id' if present
 
   res.status(201).json({
     status: 201,
     message: 'Successfully created a contact!',
-    data: contact,
+    data: contactData,
   });
 };
 
@@ -68,23 +70,25 @@ export const updateContactController = async (req, res) => {
   if (!contact) {
     throw createHttpError(404, 'Contact not found');
   }
+  const { id, ...contactData } = contact.toObject ? contact.toObject() : contact;
 
   res.json({
     status: 200,
     message: 'Successfully patched a contact!',
-    data: contact,
+    data: contactData,
   });
 };
 
 export const deleteContactController = async (req, res) => {
-
   const contact = await deleteContact(req.params.contactId, req.user._id);
   if (!contact) {
     throw createHttpError(404, 'Contact not found');
   }
+  const { id, ...contactData } = contact.toObject ? contact.toObject() : contact;
+
   res.status(204).json({
     status: 204,
     message: 'Successfully deleted a contact!',
-    data: contact,
+    data: contactData,
   });
 };
