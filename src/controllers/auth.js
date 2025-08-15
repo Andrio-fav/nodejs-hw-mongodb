@@ -26,8 +26,7 @@ export const registerController = async (req, res, next) => {
 export const loginController = async (req, res, next) => {
   try {
     const { email, password } = req.body;
-    const { user, accessToken, refreshToken, sessionId } = 
-      await loginUser(email, password);
+    const { user, accessToken, refreshToken } = await loginUser(email, password);
 
     res.cookie('refreshToken', refreshToken, {
       httpOnly: true,
@@ -39,7 +38,7 @@ export const loginController = async (req, res, next) => {
     res.status(200).json({
       status: 200,
       message: 'Successfully logged in a user!',
-      data: { user, sessionId, accessToken },
+      data: { user, accessToken },
     });
   } catch (error) {
     next(error);

@@ -44,13 +44,12 @@ export const loginUser = async (email, password) => {
     ...newSession,
   });
 
-  const { password: _, ...userData } = user.toObject();
+  const { password: _, _id, ...rest } = user.toObject();
 
   return {
-    user: userData,
+    user: { userId: _id, ...rest },  
     accessToken: session.accessToken,
     refreshToken: session.refreshToken,
-    sessionId: session._id,
   };
 };
 
