@@ -17,6 +17,8 @@ export const registerUserSchema = Joi.object({
   }),
 });
 
+export const userValidationSchema = registerUserSchema;
+
 export const loginUserSchema = Joi.object({
   email: Joi.string().email().required().messages({
     'string.base': 'Email should be a string',
