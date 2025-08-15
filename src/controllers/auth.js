@@ -140,3 +140,8 @@ export const logout = async (req, res, next) => {
     next(error);
   }
 };
+
+export const registerController = register;
+export const loginController = login;
+export const refreshController = refresh;
+export const logoutController = logout;
