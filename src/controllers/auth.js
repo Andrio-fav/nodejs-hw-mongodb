@@ -26,9 +26,10 @@ export const registerController = async (req, res, next) => {
 export const loginController = async (req, res, next) => {
   try {
     const { email, password } = req.body;
-    const session = await loginUser(email, password);
+    const { user, accessToken, refreshToken, _id: sessionId } =
+      await loginUser(email, password);
 
-    res.cookie('refreshToken', session.refreshToken, {
+    res.cookie('refreshToken', refreshToken, {
       httpOnly: true,
       secure: true,
       sameSite: 'strict',
@@ -38,7 +39,11 @@ export const loginController = async (req, res, next) => {
     res.status(200).json({
       status: 200,
       message: 'Successfully logged in a user!',
-      data: { accessToken: session.accessToken },
+      data: {
+        user,
+        sessionId,
+        accessToken,
+      },
     });
   } catch (error) {
     next(error);
@@ -66,7 +71,10 @@ export const refreshController = async (req, res, next) => {
     res.status(200).json({
       status: 200,
       message: 'Successfully refreshed a session!',
-      data: { accessToken: newSession.accessToken },
+      data: {
+        sessionId: newSession._id,
+        accessToken: newSession.accessToken,
+      },
     });
   } catch (error) {
     next(error);
