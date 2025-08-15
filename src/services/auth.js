@@ -1,18 +1,18 @@
 import { randomBytes } from 'crypto'; 
 import bcrypt from 'bcrypt';
 import createHttpError from 'http-errors';
-import { usersCollection } from '../db/models/user.js';
+import users from '../db/models/user.js';
 import  Session  from '../db/models/session.js';
 
 const FIFTEEN_MINUTES = 15 * 60 * 1000; 
 const THIRTY_DAYS = 30 * 24 * 60 * 60 * 1000; 
 
 export const registerUser = async (payload) => {
-  const user = await usersCollection.findOne({ email: payload.email });
+  const user = await users.findOne({ email: payload.email });
   if (user !== null) throw createHttpError(409, 'Email is already in use!');
 
   payload.password = await bcrypt.hash(payload.password, 10);
-  const newUser = await usersCollection.create(payload);
+  const newUser = await users.create(payload);
 
   const { password, ...userData } = newUser.toObject();
   return userData;
@@ -31,7 +31,7 @@ function createSession() {
 }
 
 export const loginUser = async (email, password) => {
-  const user = await usersCollection.findOne({ email });
+  const user = await users.findOne({ email });
   if (!user) throw createHttpError(401, 'Email or password is incorrect');
 
   const isMatch = await bcrypt.compare(password, user.password);
