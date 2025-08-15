@@ -42,8 +42,8 @@ export const getContactById = async (id, userId) => {
   return contact ? contact.toJSON() : null;
 };
 
-export const createContact = async (payload) => {
-  const contact = await ContactsCollection.create(payload);
+export const createContact = async (payload, userId) => {
+  const contact = await ContactsCollection.create({ ...payload, userId });
   return contact.toJSON();
 };
 
