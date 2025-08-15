@@ -27,3 +27,12 @@ export const loginUserSchema = Joi.object({
     'any.required': 'Password is required',
   }),
 });
+
+export const requestResetPwdEmailSchema = JoiValidation.object({
+  email: JoiValidation.string().email().required(),
+});
+
+export const resetAuthPasswordSchema = JoiValidation.object({
+  password: JoiValidation.string().required(),
+  token: JoiValidation.string().required(),
+});

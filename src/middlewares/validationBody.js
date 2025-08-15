@@ -21,5 +21,11 @@ export const validationBody = (schema) => async (req, res, next) => {
   }
 };
 
+export const registerUserBodyCheck = validationBody(userValidationSchema);
+export const loginUserBodyCheck = validationBody(userValidationSchema.fork(['name'], (field) => field.optional()));
+
+export const requestResetPwdBodyCheck = validationBody(requestResetPwdEmailSchema);
+export const resetAuthPasswordBodyCheck = validationBody(resetAuthPasswordSchema);
+
 export const createValidationBody = validationBody(bodyValidationSchema);
 export const updateValidationBody = validationBody(bodyValidationSchema);
