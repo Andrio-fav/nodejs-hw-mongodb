@@ -45,7 +45,13 @@ export const loginUser = async (email, password) => {
   });
 
   const { password: _, ...userData } = user.toObject();
-  return { user: userData, session };
+
+  return {
+    user: userData,
+    accessToken: session.accessToken,
+    refreshToken: session.refreshToken,
+    sessionId: session._id,
+  };
 };
 
 export const logoutUser = async (sessionId) => {
