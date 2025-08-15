@@ -38,6 +38,8 @@ contactSchema.set('toJSON', {
   transform: (doc, ret) => {
     // Remove the userId field from the response
     delete ret.userId;
+    // Remove any 'id' property if present
+    delete ret.id;
     return ret;
   }
 });
