@@ -1,4 +1,5 @@
 import { bodyValidationSchema } from '../validation/contacts.js';
+import { userValidationSchema } from '../validation/userValidation.js';
 
 export const validationBody = (schema) => async (req, res, next) => {
   try {
