@@ -34,4 +34,12 @@ const contactSchema = new Schema(
   },
 );
 
+contactSchema.set('toJSON', {
+  transform: (doc, ret) => {
+    delete ret.userId;
+    delete ret.id;
+    return ret;
+  }
+});
+
 export const ContactsCollection = model('contacts', contactSchema);
