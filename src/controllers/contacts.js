@@ -22,13 +22,14 @@ export const getContactsController = async (req, res) => {
 
   const sort = { [sortBy]: sortOrder === 'asc' ? 1 : -1 };
 
-  const { data, totalItems } = await getAllContacts(req.user._id, {
+  const { data, totalItems } = await getAllContacts(
     page,
     perPage,
-    filter,
     sortBy,
     sortOrder,
-  });
+    filter,
+    req.user._id
+  );
 
   res.json({
     status: 200,
