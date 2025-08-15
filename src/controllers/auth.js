@@ -141,6 +141,27 @@ export const logout = async (req, res, next) => {
   }
 };
 
+export const requestPasswordResetController = async (req, res) => {
+  await requestPasswordReset(req.body.email);
+  res.json({
+    status: 200,
+    message: 'Reset password email was successfully sent.',
+    data: {},
+  });
+};
+
+export const resetPasswordController = async (req, res) => {
+  const { password, token } = req.body;
+
+  await resetPassword(password, token);
+
+  res.json({
+    status: 200,
+    message: 'Password was successfully reset',
+    data: {},
+  });
+};
+
 export const registerController = register;
 export const loginController = login;
 export const refreshController = refresh;
