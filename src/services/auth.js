@@ -2,7 +2,7 @@ import { randomBytes } from 'crypto';
 import bcrypt from 'bcrypt';
 import createHttpError from 'http-errors';
 import { usersCollection } from '../db/models/user.js';
-import { sessionsCollection } from '../db/models/session.js';
+import { Session } from '../db/models/session.js';
 
 const FIFTEEN_MINUTES = 15 * 60 * 1000; 
 const THIRTY_DAYS = 30 * 24 * 60 * 60 * 1000; 
@@ -37,9 +37,9 @@ export const loginUser = async (email, password) => {
   const isMatch = await bcrypt.compare(password, user.password);
   if (!isMatch) throw createHttpError(401, 'Email or password is incorrect');
 
-  await sessionsCollection.deleteOne({ userId: user._id });
+  await Session.deleteOne({ userId: user._id });
   const newSession = createSession();
-  const session = await sessionsCollection.create({
+  const session = await Session.create({
     userId: user._id,
     ...newSession,
   });
@@ -49,20 +49,20 @@ export const loginUser = async (email, password) => {
 };
 
 export const logoutUser = async (sessionId) => {
-  await sessionsCollection.findByIdAndDelete(sessionId);
+  await Session.findByIdAndDelete(sessionId);
 };
 
 export const refreshSession = async (sessionId, refreshToken) => {
-  const session = await sessionsCollection.findById(sessionId);
+  const session = await Session.findById(sessionId);
   if (!session) throw createHttpError(401, 'Session not found');
   if (session.refreshToken !== refreshToken)
     throw createHttpError(401, 'Refresh token is invalid');
   if (new Date() > session.refreshTokenValidUntil)
     throw createHttpError(401, 'Refresh token expired');
 
-  await sessionsCollection.findByIdAndDelete(session._id);
+  await Session.findByIdAndDelete(session._id);
   const newSession = createSession();
-  return await sessionsCollection.create({
+  return await Session.create({
     userId: session.userId,
     ...newSession,
   });
