@@ -14,7 +14,7 @@ import { parseFilterParams } from '../utils/parseFilterParams.js';
 export const getContactsController = async (req, res) => {
   const { page, perPage } = parsePaginationParams(req.query);
   const { sortBy, sortOrder } = parseSortParams(req.query);
-  const { isFavourite, type } = parseFilterParams(req.query);
+  const { isFavourite, type } = parseFilterParams(req.query) || {}; 
 
   const filter = {};
   if (isFavourite !== null) filter.isFavourite = isFavourite;
