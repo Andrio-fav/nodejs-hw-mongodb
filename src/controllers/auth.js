@@ -1,72 +1,89 @@
 import {
   loginUser,
   logoutUser,
-  refreshSession,
+  refreshUserSession,
   registerUser,
+  requestResetToken,
+  resetAuthPassword,
 } from '../services/auth.js';
+import { ctrlWrapper } from '../utils/ctrlWrapper.js';
 
-export const registerController = async (req, res) => {
-  const user = await registerUser(req.body);
-  res.status(201).json({
-    status: 201,
-    message: 'Successfully registered a user!',
-    data: user,
-  });
-};
+export const registerUserController = ctrlWrapper(async (request, response) => {
+  const newUser = await registerUser(request.body);
 
-export const loginController = async (req, res) => {
-  const session = await loginUser(req.body.email, req.body.password);
+  response.status(201).json({ status: 201, message: 'Successfully created a user!', data: newUser });
+});
 
-  res.cookie('sessionId', session._id, {
-    httpOnly: true,
-    expires: session.refreshTokenValidUntil,
-  });
-  res.cookie('refreshToken', session.refreshToken, {
-    httpOnly: true,
-    expires: session.refreshTokenValidUntil,
-  });
+export const loginUserController = ctrlWrapper(async (request, response) => {
+  const session = await loginUser(request.body);
 
-  res.json({
+  setupSession(response, session);
+
+  response.status(200).json({
     status: 200,
     message: 'Successfully logged in an user!',
     data: {
       accessToken: session.accessToken,
     },
   });
-};
+});
 
-export const logoutController = async (req, res) => {
-  const { sessionId } = req.cookies;
+export const refreshUserController = ctrlWrapper(async (request, response) => {
+  const { sessionId, refreshToken } = request.cookies;
+  const session = await refreshUserSession(sessionId, refreshToken);
 
-  if (sessionId) {
-    await logoutUser(sessionId);
-  }
+  setupSession(response, session);
 
-  res.clearCookie('sessionId');
-  res.clearCookie('refreshToken');
-
-  res.status(204).send();
-};
-
-export const refreshController = async (req, res) => {
-  const { sessionId, refreshToken } = req.cookies;
-
-  const session = await refreshSession(sessionId, refreshToken);
-
-  res.cookie('sessionId', session._id, {
-    httpOnly: true,
-    expires: session.refreshTokenValidUntil,
-  });
-  res.cookie('refreshToken', session.refreshToken, {
-    httpOnly: true,
-    expires: session.refreshTokenValidUntil,
-  });
-
-  res.json({
+  response.status(200).json({
     status: 200,
-    message: 'Successfully refreshed session!',
+    message: 'Successfully refreshed a session!',
     data: {
       accessToken: session.accessToken,
     },
+  });
+});
+
+export const logoutUserController = ctrlWrapper(async (request, response) => {
+  if (request.cookies.sessionId) {
+    await logoutUser(request.cookies.sessionId);
+  }
+  response.clearCookie('sessionId');
+  response.clearCookie('refreshToken');
+
+  response.status(204).end();
+});
+
+//-----Password reset-----
+
+export const sendResetEmailController = ctrlWrapper(async (request, response) => {
+  await requestResetToken(request.body.email);
+
+  response.json({
+    message: 'Reset password email was successfully sent!',
+    status: 200,
+    data: {},
+  });
+});
+
+export const resetAuthPasswordController = ctrlWrapper(async (request, response) => {
+  await resetAuthPassword(request.body);
+
+  response.json({
+    message: 'Password has been successfully reset.',
+    status: 200,
+    data: {},
+  });
+});
+
+//-----HELPERS-----
+
+const setupSession = (response, session) => {
+  response.cookie('refreshToken', session.refreshToken, {
+    httpOnly: true,
+    expires: session.refreshTokenValidUntil,
+  });
+  response.cookie('sessionId', session._id, {
+    httpOnly: true,
+    expires: session.refreshTokenValidUntil,
   });
 };
