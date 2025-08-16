@@ -8,13 +8,12 @@ import { getEnvVar } from './utils/getEnvVar.js';
 import router from './routes/index.js'; 
 import { notFoundHandler } from './middlewares/notFoundHandler.js';
 import { errorHandler } from './middlewares/errorHandler.js';
-import { HTTP_PORT } from './constants/index.js';
 
 const PORT = getEnvVar('PORT');
 
 export const setupServer = () => {
   const app = express();
-  const PORT = HTTP_PORT;
+
   app.use(express.json());
   app.use(
     pino({
