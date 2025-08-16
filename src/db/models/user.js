@@ -10,6 +10,7 @@ const userSchema = new Schema(
       type: String,
       required: true,
       unique: true,
+      match: /^[^\s@]+@[^\s@]+\.[^\s@]+$/, 
     },
     password: {
       type: String,
@@ -17,16 +18,18 @@ const userSchema = new Schema(
     },
   },
   {
-    timestamps: true,
+    timestamps: true,   
     versionKey: false,
   },
 );
 
 userSchema.methods.toJSON = function () {
   const obj = this.toObject();
+  obj.userId = obj._id;
+  delete obj._id;
   delete obj.password;
   return obj;
 };
 
- const User = model('users', userSchema);
- export default User;
+const User = model('users', userSchema);
+export default User;

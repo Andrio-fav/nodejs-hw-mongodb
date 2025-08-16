@@ -5,6 +5,7 @@ const sessionSchema = new Schema(
     userId: {
       type: Schema.Types.ObjectId,
       required: true,
+      ref: 'users', 
     },
     accessToken: {
       type: String,
@@ -24,10 +25,17 @@ const sessionSchema = new Schema(
     },
   },
   {
-    timestamps: true,
+    timestamps: true, 
     versionKey: false,
   },
 );
 
-const Session = model('Session', sessionSchema);
+sessionSchema.methods.toJSON = function () {
+  const obj = this.toObject();
+  obj.sessionId = obj._id;
+  delete obj._id;
+  return obj;
+};
+
+const Session = model('sessions', sessionSchema);
 export default Session;
