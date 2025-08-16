@@ -35,15 +35,14 @@ const contactSchema = new Schema(
   {
     timestamps: true,
     versionKey: false,
-  },
-);
-
-contactSchema.set('toJSON', {
-  transform: (doc, ret) => {
-    delete ret.userId;
-    delete ret.id;
-    return ret;
+    toJSON: {
+      transform(doc, ret) {
+        ret.userId = ret._id; 
+        delete ret._id;  
+        return ret;
+      },
+    },
   }
-});
+);
 
 export const ContactsCollection = model('contacts', contactSchema);
