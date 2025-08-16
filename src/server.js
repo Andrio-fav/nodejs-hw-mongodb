@@ -2,19 +2,18 @@ import express from 'express';
 import pino from 'pino-http';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
+import path from 'node:path';
 
 import { getEnvVar } from './utils/getEnvVar.js';
-
 import router from './routes/index.js'; 
 import { notFoundHandler } from './middlewares/notFoundHandler.js';
 import { errorHandler } from './middlewares/errorHandler.js';
-import { HTTP_PORT } from './constants/index.js';
-
-const PORT = getEnvVar('PORT');
+import { HTTP_PORT, UPLOAD_DIR } from './constants/index.js';
 
 export const setupServer = () => {
   const app = express();
-  const PORT = HTTP_PORT;
+  const PORT = getEnvVar('PORT') || HTTP_PORT;
+
   app.use(express.json());
   app.use(
     pino({
@@ -24,8 +23,9 @@ export const setupServer = () => {
     }),
   );
 
-  app.use(cors({}),);
+  app.use(cors({}));
   app.use(cookieParser());
+  app.use('/uploads', express.static(UPLOAD_DIR));
 
   app.get('/', (req, res) => {
     res.json({
@@ -42,6 +42,6 @@ export const setupServer = () => {
     if (error) {
       throw new Error(error);
     }
-    console.log(`Server is running on port ${PORT}`);
+    console.log(`🚀 Server is running on port ${PORT}`);
   });
 };

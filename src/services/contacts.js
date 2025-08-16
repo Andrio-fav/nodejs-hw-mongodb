@@ -1,7 +1,6 @@
 import { ContactsCollection } from '../db/models/contact.js';
 import { calculatePaginationData } from '../utils/calculatePaginationData.js';
 
-
 export const getAllContacts = async (
   page,
   perPage,
@@ -13,7 +12,7 @@ export const getAllContacts = async (
   const skip = page > 0 ? (page - 1) * perPage : 0;
   const limit = perPage;
 
-  const contactsQuery = ContactsCollection.find({ userId }); 
+  const query = { userId };
 
   if (typeof filter.type !== 'undefined') {
     query.contactType = filter.type;
@@ -30,11 +29,10 @@ export const getAllContacts = async (
       .limit(limit)
       .exec(),
   ]);
+
   const paginationData = calculatePaginationData(contactsCount, page, perPage);
 
-  const contactsJson = contacts.map(contact => contact.toJSON());
-
-  return { data: contactsJson, ...paginationData };
+  return { data: contacts.map(contact => contact.toJSON()), ...paginationData };
 };
 
 export const getContactById = async (id, userId) => {
@@ -42,8 +40,8 @@ export const getContactById = async (id, userId) => {
   return contact ? contact.toJSON() : null;
 };
 
-export const createContact = async (payload, userId) => {
-  const contact = await ContactsCollection.create({ ...payload, userId });
+export const createContact = async (payload) => {
+  const contact = await ContactsCollection.create(payload);
   return contact.toJSON();
 };
 
@@ -51,9 +49,7 @@ export const updateContact = async (id, payload, userId) => {
   const contact = await ContactsCollection.findOneAndUpdate(
     { _id: id, userId },
     payload,
-    {
-      new: true,
-    },
+    { new: true },
   );
   return contact ? contact.toJSON() : null;
 };
