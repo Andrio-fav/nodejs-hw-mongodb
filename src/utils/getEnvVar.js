@@ -1,9 +1,9 @@
 import 'dotenv/config';
 
-export const getEnvVar = (key, defaultValue = null) => {
-  const value = process.env[key] || defaultValue;
+export const getEnvVar = (key) => {
+  const value = process.env[key];
   if (!value) {
-    console.warn(`Environment variable ${key} is not set. Using default value.`);
+    throw new Error(`Environment variable ${key} is not set`);
   }
   return value;
 };
