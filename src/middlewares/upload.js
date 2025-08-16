@@ -1,8 +1,22 @@
-import multer from 'multer';
-import { TEMP_UPLOAD_DIR } from '../constants/index.js';
+import multer from "multer";
+import path from "node:path";
+import { TEMP_UPLOAD_DIR } from "../constants/index.js";
 
 const storage = multer.diskStorage({
-  destination: (request, file, cb) => cb(null, TEMP_UPLOAD_DIR),
-  filename: (request, file, cb) => cb(null, file.fieldname + '_' + request.user._id + file.originalname.slice(-4)),
+  destination: (req, file, cb) => cb(null, TEMP_UPLOAD_DIR),
+  filename: (req, file, cb) => {
+    const ext = path.extname(file.originalname); 
+    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
+    cb(null, `${file.fieldname}_${req.user?._id || "guest"}_${uniqueSuffix}${ext}`);
+  },
 });
-export const upload = multer({ storage });
+
+const fileFilter = (req, file, cb) => {
+  if (file.mimetype.startsWith("image/")) {
+    cb(null, true);
+  } else {
+    cb(new Error("Only image files are allowed!"), false);
+  }
+};
+
+export const upload = multer({ storage, fileFilter });

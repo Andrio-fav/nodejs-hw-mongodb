@@ -8,7 +8,7 @@ export const authenticate = async (req, res, next) => {
     const [type, token] = authHeader.split(' ');
 
     if (type !== 'Bearer' || !token) {
-      throw createHttpError(401, 'No token provided');
+      throw createHttpError(401, 'No or invalid token provided');
     }
 
     const session = await Session.findOne({ accessToken: token });
@@ -16,7 +16,8 @@ export const authenticate = async (req, res, next) => {
       throw createHttpError(401, 'Invalid session');
     }
 
-    if (session.accessTokenValidUntil < new Date()) {
+    if (new Date().getTime() > new Date(session.accessTokenValidUntil).getTime()) {
+      await Session.deleteOne({ _id: session._id });
       throw createHttpError(401, 'Access token expired');
     }
 
