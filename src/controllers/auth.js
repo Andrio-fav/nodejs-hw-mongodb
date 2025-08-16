@@ -1,168 +1,84 @@
-import bcrypt from 'bcrypt';
-import jwt from 'jsonwebtoken';
 import createHttpError from 'http-errors';
-import User from '../db/models/user.js';
-import Session from '../db/models/session.js';
-import { getEnvVar } from '../utils/getEnvVar.js';
+import {
+  registerUser,
+  loginUser,
+  logoutUser,
+  refreshSession,
+} from '../services/auth.js';
 
-const JWT_SECRET = getEnvVar('JWT_SECRET');
-const ACCESS_TOKEN_TTL = 15 * 60 * 1000; 
-const REFRESH_TOKEN_TTL = 30 * 24 * 60 * 60 * 1000; 
+const THIRTY_DAYS = 30 * 24 * 60 * 60 * 1000;
 
-const generateTokens = (userId) => {
-  const accessToken = jwt.sign({ userId }, JWT_SECRET, { expiresIn: '15m' });
-  const refreshToken = jwt.sign({ userId }, JWT_SECRET, { expiresIn: '30d' });
-
-  return {
-    accessToken,
-    refreshToken,
-    accessTokenValidUntil: new Date(Date.now() + ACCESS_TOKEN_TTL),
-    refreshTokenValidUntil: new Date(Date.now() + REFRESH_TOKEN_TTL),
-  };
-};
-
-export const register = async (req, res, next) => {
+export const registerController = async (req, res, next) => {
   try {
-    const { name, email, password } = req.body;
-
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
-      throw createHttpError(409, 'Email in use');
-    }
-
-    const hashedPassword = await bcrypt.hash(password, 10);
-    const newUser = await User.create({ name, email, password: hashedPassword });
-
-    const { password: _, ...userData } = newUser.toObject();
+    const user = await registerUser(req.body);
+    const { password, _id, ...rest } = user.toObject();
 
     res.status(201).json({
       status: 201,
       message: 'Successfully registered a user!',
-      data: userData,
+      data: { userId: _id, ...rest }, 
     });
   } catch (error) {
     next(error);
   }
 };
 
-export const login = async (req, res, next) => {
+export const loginController = async (req, res, next) => {
   try {
     const { email, password } = req.body;
-
-    const user = await User.findOne({ email });
-    if (!user) {
-      throw createHttpError(401, 'Invalid email or password');
-    }
-
-    const isPasswordValid = await bcrypt.compare(password, user.password);
-    if (!isPasswordValid) {
-      throw createHttpError(401, 'Invalid email or password');
-    }
-
-    await Session.deleteOne({ userId: user._id });
-
-    const { accessToken, refreshToken, accessTokenValidUntil, refreshTokenValidUntil } = generateTokens(user._id);
-    await Session.create({
-      userId: user._id,
-      accessToken,
-      refreshToken,
-      accessTokenValidUntil,
-      refreshTokenValidUntil,
-    });
+    const { user, accessToken, refreshToken } = await loginUser(email, password);
 
     res.cookie('refreshToken', refreshToken, {
       httpOnly: true,
       secure: true,
       sameSite: 'strict',
-      maxAge: REFRESH_TOKEN_TTL,
+      maxAge: THIRTY_DAYS,
     });
 
     res.status(200).json({
       status: 200,
       message: 'Successfully logged in a user!',
-      data: { accessToken },
+      data: { user, accessToken },
     });
   } catch (error) {
     next(error);
   }
 };
 
-export const refresh = async (req, res, next) => {
+export const refreshController = async (req, res, next) => {
   try {
     const { refreshToken } = req.cookies;
+
     if (!refreshToken) {
       throw createHttpError(401, 'No refresh token provided');
     }
 
-    const payload = jwt.verify(refreshToken, JWT_SECRET);
-    const session = await Session.findOne({ refreshToken });
-    if (!session || session.refreshTokenValidUntil < new Date()) {
-      throw createHttpError(401, 'Invalid or expired refresh token');
-    }
+    const newSession = await refreshSession(refreshToken);
 
-    await Session.deleteOne({ _id: session._id });
-
-    const { accessToken, refreshToken: newRefresh, accessTokenValidUntil, refreshTokenValidUntil } = generateTokens(payload.userId);
-    await Session.create({
-      userId: payload.userId,
-      accessToken,
-      refreshToken: newRefresh,
-      accessTokenValidUntil,
-      refreshTokenValidUntil,
-    });
-
-    res.cookie('refreshToken', newRefresh, {
+    res.cookie('refreshToken', newSession.refreshToken, {
       httpOnly: true,
       secure: true,
       sameSite: 'strict',
-      maxAge: REFRESH_TOKEN_TTL,
+      maxAge: THIRTY_DAYS,
     });
 
     res.status(200).json({
       status: 200,
       message: 'Successfully refreshed a session!',
-      data: { accessToken },
+      data: { accessToken: newSession.accessToken },
     });
   } catch (error) {
     next(error);
   }
 };
 
-export const logout = async (req, res, next) => {
+export const logoutController = async (req, res, next) => {
   try {
-    const { refreshToken } = req.cookies;
-    if (refreshToken) {
-      await Session.deleteOne({ refreshToken });
-    }
+    const { sessionId } = req.body;
+    await logoutUser(sessionId);
     res.clearCookie('refreshToken');
     res.status(204).send();
   } catch (error) {
     next(error);
   }
 };
-
-export const requestPasswordResetController = async (req, res) => {
-  await requestPasswordReset(req.body.email);
-  res.json({
-    status: 200,
-    message: 'Reset password email was successfully sent.',
-    data: {},
-  });
-};
-
-export const resetPasswordController = async (req, res) => {
-  const { password, token } = req.body;
-
-  await resetPassword(password, token);
-
-  res.json({
-    status: 200,
-    message: 'Password was successfully reset',
-    data: {},
-  });
-};
-
-export const registerController = register;
-export const loginController = login;
-export const refreshController = refresh;
-export const logoutController = logout;

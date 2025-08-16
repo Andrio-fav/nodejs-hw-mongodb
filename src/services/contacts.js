@@ -1,7 +1,6 @@
 import { ContactsCollection } from '../db/models/contact.js';
 import { calculatePaginationData } from '../utils/calculatePaginationData.js';
 
-
 export const getAllContacts = async (
   page,
   perPage,
@@ -42,8 +41,8 @@ export const getContactById = async (id, userId) => {
   return contact ? contact.toJSON() : null;
 };
 
-export const createContact = async (payload, userId) => {
-  const contact = await ContactsCollection.create({ ...payload, userId });
+export const createContact = async (payload) => {
+  const contact = await ContactsCollection.create(payload);
   return contact.toJSON();
 };
 
