@@ -11,12 +11,12 @@ const THIRTY_DAYS = 30 * 24 * 60 * 60 * 1000;
 export const registerController = async (req, res, next) => {
   try {
     const user = await registerUser(req.body);
-    const { password, ...userData } = user.toObject();
+    const { password, _id, ...rest } = user.toObject();
 
     res.status(201).json({
       status: 201,
       message: 'Successfully registered a user!',
-      data: userData,
+      data: { userId: _id, ...rest }, 
     });
   } catch (error) {
     next(error);

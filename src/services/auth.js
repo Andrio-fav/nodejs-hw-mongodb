@@ -14,8 +14,7 @@ export const registerUser = async (payload) => {
   payload.password = await bcrypt.hash(payload.password, 10);
   const newUser = await users.create(payload);
 
-  const { password, ...userData } = newUser.toObject();
-  return userData;
+  return newUser; 
 };
 
 function createSession() {
