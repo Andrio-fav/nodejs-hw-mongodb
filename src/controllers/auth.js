@@ -8,7 +8,7 @@ import {
   refreshSession,
 } from "../services/auth.js";
 
-import { User } from "../db/models/user.js";
+import User from "../db/models/user.js";
 import { sendMail } from "../utils/sendMail.js";
 import { getEnvVar } from "../utils/getEnvVar.js";
 
