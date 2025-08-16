@@ -8,7 +8,7 @@ import {
   refreshSession,
 } from "../services/auth.js";
 
-import { User } from "../db/models/user.js";
+import User from "../db/models/user.js";
 import { sendMail } from "../utils/sendMail.js";
 import { getEnvVar } from "../utils/getEnvVar.js";
 
@@ -86,6 +86,16 @@ export const logoutController = async (req, res, next) => {
     await logoutUser(sessionId);
     res.clearCookie("refreshToken");
     res.status(204).send();
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const resetPasswordController = async (req, res, next) => {
+  try {
+    const { token, password } = req.body;
+    await resetPassword(token, password);
+    res.status(200).json({ message: "Password has been reset successfully" });
   } catch (error) {
     next(error);
   }
